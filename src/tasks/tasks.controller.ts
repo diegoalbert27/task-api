@@ -44,8 +44,8 @@ export class TasksController {
   }
 
   @Patch(':id')
-  editTask(@Param('id') id: string, @Body() updateTask: UpdateTaskDto) {
-    const editedTask = this.tasksService.updateTask(id, updateTask);
+  async editTask(@Param('id') id: string, @Body() updateTask: UpdateTaskDto) {
+    const editedTask = await this.tasksService.updateTask(id, updateTask);
 
     if (!editedTask) {
       throw new NotFoundException({

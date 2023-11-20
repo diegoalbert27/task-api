@@ -1,48 +1,48 @@
 import { Injectable } from '@nestjs/common';
-import { Task, TaskStatus } from './task.entity';
-import { v4 } from 'uuid';
+import { Task } from './task.entity';
 import { UpdateTaskDto } from './dto/task.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [];
+  constructor(
+    @InjectRepository(Task)
+    private tasksRepository: Repository<Task>,
+  ) {}
 
-  getAllTasks() {
-    return this.tasks;
+  async getAllTasks() {
+    return await this.tasksRepository.find();
   }
 
-  getTaskById(id: string): Task {
-    return this.tasks.find((task) => task.id === id);
+  async getTaskById(id: string) {
+    return await this.tasksRepository.findOneBy({ id });
   }
 
-  createTask(title: string, description: string) {
+  async createTask(title: string, description: string) {
     const task = new Task();
 
-    task.id = v4();
     task.title = title;
     task.description = description;
-    task.status = TaskStatus.PENDING;
 
-    this.tasks.push(task);
+    await this.tasksRepository.save(task);
 
     return task;
   }
 
-  updateTask(id: string, updatedFields: UpdateTaskDto): Task | boolean {
-    const task = this.getTaskById(id);
+  async updateTask(id: string, updatedFields: UpdateTaskDto) {
+    const task = await this.getTaskById(id);
 
-    if (task === undefined) {
+    if (task === null) {
       return false;
     }
 
-    const newTask = Object.assign(task, updatedFields);
+    await this.tasksRepository.save(Object.assign(task, updatedFields));
 
-    this.tasks = this.tasks.map((task) => (task.id === id ? newTask : task));
-
-    return newTask;
+    return task;
   }
 
-  deleteTask(id: string) {
-    this.tasks = this.tasks.filter((task) => task.id !== id);
+  async deleteTask(id: string) {
+    await this.tasksRepository.delete(id);
   }
 }
